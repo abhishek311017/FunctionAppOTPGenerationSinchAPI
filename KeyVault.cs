@@ -20,7 +20,6 @@ namespace FunctionSinchapi
     /// </summary>
     public class KeyVault : EnvironmentConfiguration
     {
-
         private static async Task<string> GetNewKeyVaultAccessToken()
         {
             Microsoft.Identity.Client.AuthenticationResult authResult = null;
@@ -40,7 +39,7 @@ namespace FunctionSinchapi
             try
             {
                 string bearerToken = await GetKeyVaultAccessToken();
-                // string bearerToken = await GetNewKeyVaultAccessToken();
+                //string bearerToken = await GetNewKeyVaultAccessToken();
 
                 if (!string.IsNullOrEmpty(bearerToken))
                 {
@@ -70,6 +69,7 @@ namespace FunctionSinchapi
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.ToString());
                 throw;
             }
 
@@ -88,7 +88,8 @@ namespace FunctionSinchapi
             }
             catch (Exception ex)
             {
-                throw ex;
+                Console.WriteLine(ex.ToString());
+                throw;
             }
         }
 
@@ -104,7 +105,9 @@ namespace FunctionSinchapi
                 retry = false;
                 try
                 {
+#pragma warning disable CS0618 // Type or member is obsolete
                     result = await context.AcquireTokenAsync(resource, credentials);
+#pragma warning restore CS0618 // Type or member is obsolete
                 }
                 catch (AdalException ex)
                 {
@@ -129,6 +132,7 @@ namespace FunctionSinchapi
 
                     if (retryCount == 3)
                     {
+                        Console.WriteLine($"{ex.Message}");
                         throw;
                     }
                 }
