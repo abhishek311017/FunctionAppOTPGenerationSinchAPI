@@ -25,31 +25,38 @@ namespace FunctionSinchapi
 
     public class SinchApi : EnvironmentConfiguration
     {
-        // private HttpClient httpClient;
-
+        #region Variables
         private CloudStorage cloudStorage = null;
 
         private readonly string logFileName = string.Empty;
 
         private readonly string sinchAccessKey;
-        private readonly string sinchAccessSecret;
-        private readonly string sinchAuthURL;
-        private readonly string sinchProjectID;
-        private readonly string sinchAppID;
-        private readonly string base64Auth;
 
+        private readonly string sinchAccessSecret;
+
+        private readonly string sinchAuthURL;
+
+        private readonly string sinchProjectID;
+
+        private readonly string sinchAppID;
+
+        private readonly string base64Auth;
+        #endregion
+
+        #region Constructor
         public SinchApi()
         {
+            this.GetEnvironmentVariables();
             sinchAccessKey = Environment.GetEnvironmentVariable("SinchAccessKey");//await KeyVault.GetKeyVaultSecret("sinchAccessKey"); // 
             sinchAccessSecret = Environment.GetEnvironmentVariable("SinchAccessSecret");//await KeyVault.GetKeyVaultSecret("sinchAccessSecret"); //
             sinchAuthURL = Environment.GetEnvironmentVariable("SinchAuthURL");//await KeyVault.GetKeyVaultSecret("sinchProjectID"); // 
             sinchProjectID = Environment.GetEnvironmentVariable("SinchProjectID");
             sinchAppID = Environment.GetEnvironmentVariable("SinchAppID"); //await KeyVault.GetKeyVaultSecret("sinchAppID");
             base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{sinchAccessKey}:{sinchAccessSecret}"));
-            this.GetEnvironmentVariables();
             cloudStorage = new CloudStorage();
             this.logFileName = this.salesLogsFolder + this.sinchLogsFolder + DateTime.UtcNow.ToString("hh:mm:ss.fff tt") + ".txt";
         }
+        #endregion
 
         private async Task<string> GetAccessToken()
         {
@@ -59,7 +66,7 @@ namespace FunctionSinchapi
             });
 
             //string sinchAccessKey = Environment.GetEnvironmentVariable("SinchAccessKey");//await KeyVault.GetKeyVaultSecret("sinchAccessKey"); // 
-            // string sinchAccessSecret = Environment.GetEnvironmentVariable("SinchAccessSecret");//await KeyVault.GetKeyVaultSecret("sinchAccessSecret"); //
+            //string sinchAccessSecret = Environment.GetEnvironmentVariable("SinchAccessSecret");//await KeyVault.GetKeyVaultSecret("sinchAccessSecret"); //
             //string sinchAuthURL = Environment.GetEnvironmentVariable("SinchAuthURL");//await KeyVault.GetKeyVaultSecret("sinchProjectID");// 
             //string base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{sinchAccessKey}:{sinchAccessSecret}"));
 
