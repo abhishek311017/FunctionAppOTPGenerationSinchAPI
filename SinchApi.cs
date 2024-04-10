@@ -1,25 +1,79 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace FunctionSinchapi
 {
+    public class TokenResponse
+    {
+        [JsonProperty("access_token")]
+        public string AccessToken { get; set; }
+
+        [JsonProperty("expires_in")]
+        public int ExpiresIn { get; set; }
+
+        [JsonProperty("scope")]
+        public string Scope { get; set; }
+
+        [JsonProperty("token_type")]
+        public string TokenType { get; set; }
+    }
+
     public class SinchApi : EnvironmentConfiguration
     {
-        private HttpClient httpClient;
+        // private HttpClient httpClient;
 
         private CloudStorage cloudStorage = null;
 
         private readonly string logFileName = string.Empty;
 
+        private readonly string sinchAccessKey;
+        private readonly string sinchAccessSecret;
+        private readonly string sinchAuthURL;
+        private readonly string sinchProjectID;
+        private readonly string sinchAppID;
+        private readonly string base64Auth;
+
         public SinchApi()
         {
-            httpClient = new HttpClient();
+            sinchAccessKey = Environment.GetEnvironmentVariable("SinchAccessKey");//await KeyVault.GetKeyVaultSecret("sinchAccessKey"); // 
+            sinchAccessSecret = Environment.GetEnvironmentVariable("SinchAccessSecret");//await KeyVault.GetKeyVaultSecret("sinchAccessSecret"); //
+            sinchAuthURL = Environment.GetEnvironmentVariable("SinchAuthURL");//await KeyVault.GetKeyVaultSecret("sinchProjectID"); // 
+            sinchProjectID = Environment.GetEnvironmentVariable("SinchProjectID");
+            sinchAppID = Environment.GetEnvironmentVariable("SinchAppID"); //await KeyVault.GetKeyVaultSecret("sinchAppID");
+            base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{sinchAccessKey}:{sinchAccessSecret}"));
             this.GetEnvironmentVariables();
             cloudStorage = new CloudStorage();
             this.logFileName = this.salesLogsFolder + this.sinchLogsFolder + DateTime.UtcNow.ToString("hh:mm:ss.fff tt") + ".txt";
+        }
+
+        private async Task<string> GetAccessToken()
+        {
+            var requestData = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("grant_type", "client_credentials")
+            });
+
+            //string sinchAccessKey = Environment.GetEnvironmentVariable("SinchAccessKey");//await KeyVault.GetKeyVaultSecret("sinchAccessKey"); // 
+            // string sinchAccessSecret = Environment.GetEnvironmentVariable("SinchAccessSecret");//await KeyVault.GetKeyVaultSecret("sinchAccessSecret"); //
+            //string sinchAuthURL = Environment.GetEnvironmentVariable("SinchAuthURL");//await KeyVault.GetKeyVaultSecret("sinchProjectID");// 
+            //string base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{sinchAccessKey}:{sinchAccessSecret}"));
+
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", base64Auth);
+                var response = await httpClient.PostAsync(sinchAuthURL, requestData);
+                var responseData = await response.Content.ReadAsStringAsync();
+
+                var tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(responseData);
+
+                string accessToken = tokenResponse.AccessToken;
+                return accessToken;
+            }
         }
 
         private static string GenerateVerificationCode()
@@ -38,12 +92,12 @@ namespace FunctionSinchapi
                 Console.WriteLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + ": Execution started");
 
                 ////Need to take below credentials from keyvault////
-                string sinchAccessKey = Environment.GetEnvironmentVariable("SinchAccessKey");//await KeyVault.GetKeyVaultSecret("sinchAccessKey"); // 
-                string sinchAccessSecret = Environment.GetEnvironmentVariable("SinchAccessSecret");//await KeyVault.GetKeyVaultSecret("sinchAccessSecret"); // // //
-                string sinchProjectID = Environment.GetEnvironmentVariable("SinchProjectID");//await KeyVault.GetKeyVaultSecret("sinchProjectID"); // 
-                string sinchAppID = Environment.GetEnvironmentVariable("SinchAppID"); //await KeyVault.GetKeyVaultSecret("sinchAppID");
+                //string sinchAccessKey = Environment.GetEnvironmentVariable("SinchAccessKey");//await KeyVault.GetKeyVaultSecret("sinchAccessKey"); // 
+                //string sinchAccessSecret = Environment.GetEnvironmentVariable("SinchAccessSecret");//await KeyVault.GetKeyVaultSecret("sinchAccessSecret"); // // //
+                //string sinchProjectID = Environment.GetEnvironmentVariable("SinchProjectID");//await KeyVault.GetKeyVaultSecret("sinchProjectID"); // 
+                //string sinchAppID = Environment.GetEnvironmentVariable("SinchAppID"); //await KeyVault.GetKeyVaultSecret("sinchAppID");
 
-                string base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($@"{sinchAccessKey}:{sinchAccessSecret}"));
+                //string base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($@"{sinchAccessKey}:{sinchAccessSecret}"));
                 string authCode = GenerateVerificationCode();
 
                 this.logTracker.AppendLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + ": Verification code generated");
@@ -85,24 +139,29 @@ namespace FunctionSinchapi
 
                 var sinchConversationAppURL = String.Format(this.sinchAppURL, sinchProjectID);
                 var postData = new StringContent(requestJson.ToString(), Encoding.UTF8, "application/json");
-                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", base64Auth);
+                var accessToken = await GetAccessToken();
 
-                logTracker.AppendLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + ": Sinch Api call started to send code");
-                var response = await httpClient.PostAsync(sinchConversationAppURL, postData);
+                using (var httpClient = new HttpClient())
+                {
+                    httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    logTracker.AppendLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + $": SinchConversation API request failed with status code: {response.StatusCode} and status message:{response.RequestMessage}");
-                    throw new Exception();
-                }
-                else
-                {
-                    logTracker.AppendLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + $": Verification Code successfully sent to {phoneNumber}");
-                    responseBody = new JObject
+                    logTracker.AppendLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + ": Sinch Api call started to send code");
+                    var response = await httpClient.PostAsync(sinchConversationAppURL, postData);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        logTracker.AppendLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + $": SinchConversation API request failed with status code: {response.StatusCode} and status message:{response.RequestMessage}");
+                        throw new Exception();
+                    }
+                    else
+                    {
+                        logTracker.AppendLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + $": Verification Code successfully sent to {phoneNumber}");
+                        responseBody = new JObject
                                     {
                                         { "phoneNumber", phoneNumber },
                                         { "authCode", authCode }
                                     };
+                    }
                 }
             }
             catch (Exception ex)
