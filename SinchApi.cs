@@ -30,29 +30,23 @@ namespace FunctionSinchapi
 
         private readonly string logFileName = string.Empty;
 
-        private readonly string sinchAccessKey;
+        private string sinchAccessKey;
 
-        private readonly string sinchAccessSecret;
+        private string sinchAccessSecret;
 
-        private readonly string sinchAuthURL;
+        private string sinchAuthURL;
 
-        private readonly string sinchProjectID;
+        private string sinchProjectID;
 
-        private readonly string sinchAppID;
+        private string sinchAppID;
 
-        private readonly string base64Auth;
+        private string base64Auth;
         #endregion
 
         #region Constructor
         public SinchApi()
         {
             this.GetEnvironmentVariables();
-            sinchAccessKey = Environment.GetEnvironmentVariable("SinchAccessKey");//await KeyVault.GetKeyVaultSecret("SinchAccessKey"); // 
-            sinchAccessSecret = Environment.GetEnvironmentVariable("SinchAccessSecret");//await KeyVault.GetKeyVaultSecret("SinchAccessSecret"); //
-            sinchAuthURL = Environment.GetEnvironmentVariable("SinchAuthURL");//await KeyVault.GetKeyVaultSecret("SinchAuthURL"); // 
-            sinchProjectID = Environment.GetEnvironmentVariable("SinchProjectID");//await KeyVault.GetKeyVaultSecret("SinchProjectID");
-            sinchAppID = Environment.GetEnvironmentVariable("SinchAppID"); //await KeyVault.GetKeyVaultSecret("SinchAppID");
-            base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{sinchAccessKey}:{sinchAccessSecret}"));
             cloudStorage = new CloudStorage();
             this.logFileName = this.salesLogsFolder + this.sinchLogsFolder + DateTime.UtcNow.ToString("hh:mm:ss.fff tt") + ".txt";
         }
@@ -65,10 +59,10 @@ namespace FunctionSinchapi
                 new KeyValuePair<string, string>("grant_type", "client_credentials")
             });
 
-            //string sinchAccessKey = Environment.GetEnvironmentVariable("SinchAccessKey");//await KeyVault.GetKeyVaultSecret("sinchAccessKey"); // 
-            //string sinchAccessSecret = Environment.GetEnvironmentVariable("SinchAccessSecret");//await KeyVault.GetKeyVaultSecret("sinchAccessSecret"); //
-            //string sinchAuthURL = Environment.GetEnvironmentVariable("SinchAuthURL");//await KeyVault.GetKeyVaultSecret("sinchProjectID");// 
-            //string base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{sinchAccessKey}:{sinchAccessSecret}"));
+            sinchAccessKey = await KeyVault.GetKeyVaultSecret("SinchAccessKey"); // Environment.GetEnvironmentVariable("SinchAccessKey");//
+            sinchAccessSecret = await KeyVault.GetKeyVaultSecret("SinchAccessSecret"); //Environment.GetEnvironmentVariable("SinchAccessSecret");//
+            sinchAuthURL = Environment.GetEnvironmentVariable("SinchAuthURL");
+            base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{sinchAccessKey}:{sinchAccessSecret}"));
 
             using (var httpClient = new HttpClient())
             {
@@ -96,34 +90,14 @@ namespace FunctionSinchapi
 
             try
             {
+
+                sinchProjectID = await KeyVault.GetKeyVaultSecret("SinchProjectID");//Environment.GetEnvironmentVariable("SinchProjectID");//
+                sinchAppID = await KeyVault.GetKeyVaultSecret("SinchAppID");//Environment.GetEnvironmentVariable("SinchAppID"); //
                 Console.WriteLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + ": Execution started");
 
-                ////Need to take below credentials from keyvault////
-                //string sinchAccessKey = Environment.GetEnvironmentVariable("SinchAccessKey");//await KeyVault.GetKeyVaultSecret("sinchAccessKey"); // 
-                //string sinchAccessSecret = Environment.GetEnvironmentVariable("SinchAccessSecret");//await KeyVault.GetKeyVaultSecret("sinchAccessSecret"); // // //
-                //string sinchProjectID = Environment.GetEnvironmentVariable("SinchProjectID");//await KeyVault.GetKeyVaultSecret("sinchProjectID"); // 
-                //string sinchAppID = Environment.GetEnvironmentVariable("SinchAppID"); //await KeyVault.GetKeyVaultSecret("sinchAppID");
-
-                //string base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($@"{sinchAccessKey}:{sinchAccessSecret}"));
                 string authCode = GenerateVerificationCode();
 
                 this.logTracker.AppendLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + ": Verification code generated");
-
-                //var requestJson = JObject.Parse($@"
-                //                {{
-                //                    ""identity"": {{
-                //                        ""type"": ""number"",
-                //                        ""endpoint"": ""{phoneNumber}""
-                //                    }},
-                //                    ""method"": ""sms"",
-                //                    ""smsOptions"": {{
-                //                        ""expiry"": ""00:10:00"",
-                //                        ""codeType"": ""Numeric"",
-                //                        ""code"":""{authCode}"",
-                //                        ""template"": ""Your verification code is {{{{CODE}}}}""
-                //                 }}
-                //                }}
-                //");
 
                 var requestJson = JObject.Parse($@"{{
                             ""app_id"": ""{sinchAppID}"",
