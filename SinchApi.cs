@@ -47,11 +47,11 @@ namespace FunctionSinchapi
         public SinchApi()
         {
             this.GetEnvironmentVariables();
-            sinchAccessKey = Environment.GetEnvironmentVariable("SinchAccessKey");//await KeyVault.GetKeyVaultSecret("sinchAccessKey"); // 
-            sinchAccessSecret = Environment.GetEnvironmentVariable("SinchAccessSecret");//await KeyVault.GetKeyVaultSecret("sinchAccessSecret"); //
-            sinchAuthURL = Environment.GetEnvironmentVariable("SinchAuthURL");//await KeyVault.GetKeyVaultSecret("sinchProjectID"); // 
-            sinchProjectID = Environment.GetEnvironmentVariable("SinchProjectID");
-            sinchAppID = Environment.GetEnvironmentVariable("SinchAppID"); //await KeyVault.GetKeyVaultSecret("sinchAppID");
+            sinchAccessKey = Environment.GetEnvironmentVariable("SinchAccessKey");//await KeyVault.GetKeyVaultSecret("SinchAccessKey"); // 
+            sinchAccessSecret = Environment.GetEnvironmentVariable("SinchAccessSecret");//await KeyVault.GetKeyVaultSecret("SinchAccessSecret"); //
+            sinchAuthURL = Environment.GetEnvironmentVariable("SinchAuthURL");//await KeyVault.GetKeyVaultSecret("SinchAuthURL"); // 
+            sinchProjectID = Environment.GetEnvironmentVariable("SinchProjectID");//await KeyVault.GetKeyVaultSecret("SinchProjectID");
+            sinchAppID = Environment.GetEnvironmentVariable("SinchAppID"); //await KeyVault.GetKeyVaultSecret("SinchAppID");
             base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{sinchAccessKey}:{sinchAccessSecret}"));
             cloudStorage = new CloudStorage();
             this.logFileName = this.salesLogsFolder + this.sinchLogsFolder + DateTime.UtcNow.ToString("hh:mm:ss.fff tt") + ".txt";
@@ -140,7 +140,8 @@ namespace FunctionSinchapi
                             ""message"": {{
                                 ""text_message"": {{
                                     ""text"": ""Your AGDCNow verification code is {authCode}""
-                                }}
+                                }},
+                            ""processing_mode"": ""DISPATCH""
                             }},
                         }}");
 
