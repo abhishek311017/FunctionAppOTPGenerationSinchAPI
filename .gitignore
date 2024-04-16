@@ -262,3 +262,5 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/Properties/PublishProfiles/appFNC-SALES-D01 - Zip Deploy.pubxml
+/Properties/ServiceDependencies/appFNC-SALES-D01 - Zip Deploy/profile.arm.json
