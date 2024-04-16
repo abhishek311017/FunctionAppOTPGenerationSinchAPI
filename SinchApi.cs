@@ -1,27 +1,25 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace FunctionSinchapi
 {
-    public class TokenResponse
-    {
-        [JsonProperty("access_token")]
-        public string AccessToken { get; set; }
+    //public class TokenResponse
+    //{
+    //    [JsonProperty("access_token")]
+    //    public string AccessToken { get; set; }
 
-        [JsonProperty("expires_in")]
-        public int ExpiresIn { get; set; }
+    //    [JsonProperty("expires_in")]
+    //    public int ExpiresIn { get; set; }
 
-        [JsonProperty("scope")]
-        public string Scope { get; set; }
+    //    [JsonProperty("scope")]
+    //    public string Scope { get; set; }
 
-        [JsonProperty("token_type")]
-        public string TokenType { get; set; }
-    }
+    //    [JsonProperty("token_type")]
+    //    public string TokenType { get; set; }
+    //}
 
     public class SinchApi : EnvironmentConfiguration
     {
@@ -30,15 +28,17 @@ namespace FunctionSinchapi
 
         private readonly string logFileName = string.Empty;
 
-        private string sinchAccessKey;
+        //private string sinchAccessKey;
 
-        private string sinchAccessSecret;
+        //private string sinchAccessSecret;
 
-        private string sinchAuthURL;
+        // private string sinchAuthURL;
 
-        private string sinchProjectID;
+        private string sinchServicePlanID;
 
-        private string sinchAppID;
+        private string sinchAPIKey;
+
+        private string sinchPhoneNumber;
 
         private string base64Auth;
         #endregion
@@ -52,30 +52,30 @@ namespace FunctionSinchapi
         }
         #endregion
 
-        private async Task<string> GetAccessToken()
-        {
-            var requestData = new FormUrlEncodedContent(new[]
-            {
-                new KeyValuePair<string, string>("grant_type", "client_credentials")
-            });
+        //private async Task<string> GetAccessToken()
+        //{
+        //    var requestData = new FormUrlEncodedContent(new[]
+        //    {
+        //        new KeyValuePair<string, string>("grant_type", "client_credentials")
+        //    });
 
-            sinchAccessKey = await KeyVault.GetKeyVaultSecret("SinchAccessKey"); // Environment.GetEnvironmentVariable("SinchAccessKey");//
-            sinchAccessSecret = await KeyVault.GetKeyVaultSecret("SinchAccessSecret"); //Environment.GetEnvironmentVariable("SinchAccessSecret");//
-            sinchAuthURL = Environment.GetEnvironmentVariable("SinchAuthURL");
-            base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{sinchAccessKey}:{sinchAccessSecret}"));
+        //    sinchAccessKey = Environment.GetEnvironmentVariable("SinchAccessKey");//await KeyVault.GetKeyVaultSecret("SinchAccessKey"); // 
+        //    sinchAccessSecret = Environment.GetEnvironmentVariable("SinchAccessSecret");//await KeyVault.GetKeyVaultSecret("SinchAccessSecret"); //
+        //    sinchAuthURL = Environment.GetEnvironmentVariable("SinchAuthURL");
+        //    base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{sinchAccessKey}:{sinchAccessSecret}"));
 
-            using (var httpClient = new HttpClient())
-            {
-                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", base64Auth);
-                var response = await httpClient.PostAsync(sinchAuthURL, requestData);
-                var responseData = await response.Content.ReadAsStringAsync();
+        //    using (var httpClient = new HttpClient())
+        //    {
+        //        httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", base64Auth);
+        //        var response = await httpClient.PostAsync(sinchAuthURL, requestData);
+        //        var responseData = await response.Content.ReadAsStringAsync();
 
-                var tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(responseData);
+        //        var tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(responseData);
 
-                string accessToken = tokenResponse.AccessToken;
-                return accessToken;
-            }
-        }
+        //        string accessToken = tokenResponse.AccessToken;
+        //        return accessToken;
+        //    }
+        //}
 
         private static string GenerateVerificationCode()
         {
@@ -91,8 +91,11 @@ namespace FunctionSinchapi
             try
             {
 
-                sinchProjectID = await KeyVault.GetKeyVaultSecret("SinchProjectID");//Environment.GetEnvironmentVariable("SinchProjectID");//
-                sinchAppID = await KeyVault.GetKeyVaultSecret("SinchAppID");//Environment.GetEnvironmentVariable("SinchAppID"); //
+                //sinchProjectID = Environment.GetEnvironmentVariable("SinchProjectID");//await KeyVault.GetKeyVaultSecret("SinchProjectID");//
+                //sinchAppID = Environment.GetEnvironmentVariable("SinchAppID"); //await KeyVault.GetKeyVaultSecret("SinchAppID");//
+                sinchPhoneNumber = Environment.GetEnvironmentVariable("SinchPhoneNumber");
+                sinchAPIKey = Environment.GetEnvironmentVariable("SinchAPIKey");
+                sinchServicePlanID = Environment.GetEnvironmentVariable("SinchServicePlanID");//await KeyVault.GetKeyVaultSecret("SinchServicePlanID");//
                 Console.WriteLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + ": Execution started");
 
                 string authCode = GenerateVerificationCode();
@@ -100,38 +103,29 @@ namespace FunctionSinchapi
                 this.logTracker.AppendLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + ": Verification code generated");
 
                 var requestJson = JObject.Parse($@"{{
-                            ""app_id"": ""{sinchAppID}"",
-                            ""recipient"": {{
-                                ""identified_by"": {{
-                                    ""channel_identities"": [
-                                        {{
-                                            ""channel"": ""SMS"",
-                                            ""identity"": ""{phoneNumber}""
-                                        }}
-                                    ]
-                                }}
-                            }},
-                            ""message"": {{
-                                ""text_message"": {{
-                                    ""text"": ""Your AGDCNow verification code is {authCode}""
-                                }},
-                            ""processing_mode"": ""DISPATCH""
-                            }},
+                            ""from"": ""{sinchPhoneNumber}"",
+                            ""to"": [
+                                    ""{phoneNumber}""
+                                    ],
+                            ""body"": ""Your AGDCNow verification code is {authCode}"",
+                            ""delivery_report"": ""none"",
+                            ""type"": ""mt_text""
                         }}");
 
-                var sinchConversationAppURL = String.Format(this.sinchAppURL, sinchProjectID);
+                var sinchConversationAppURL = String.Format(this.sinchAppURL, sinchServicePlanID);
                 var postData = new StringContent(requestJson.ToString(), Encoding.UTF8, "application/json");
-                var accessToken = await GetAccessToken();
+                // var accessToken = await GetAccessToken();
 
                 using (var httpClient = new HttpClient())
                 {
-                    httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                    httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", sinchAPIKey);
 
                     logTracker.AppendLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + ": Sinch Api call started to send code");
                     var response = await httpClient.PostAsync(sinchConversationAppURL, postData);
 
                     if (!response.IsSuccessStatusCode)
                     {
+                        Console.WriteLine(await response.Content.ReadAsStringAsync());
                         logTracker.AppendLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + $": SinchConversation API request failed with status code: {response.StatusCode} and status message:{response.RequestMessage}");
                         throw new Exception();
                     }

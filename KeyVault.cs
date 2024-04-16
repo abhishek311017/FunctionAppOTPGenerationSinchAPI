@@ -3,7 +3,6 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
@@ -20,17 +19,17 @@ namespace FunctionSinchapi
     /// </summary>
     public class KeyVault : EnvironmentConfiguration
     {
-        private static async Task<string> GetNewKeyVaultAccessToken()
-        {
-            Microsoft.Identity.Client.AuthenticationResult authResult = null;
-            string authority = String.Format(CultureInfo.InvariantCulture, salesAADInstance, salesTenant);
-            List<String> scopes = new List<String>() { salesResourceID + "/.default" };
-            authResult = await Microsoft.Identity.Client.ConfidentialClientApplicationBuilder.Create(salesKeyVaultClientId)
-                                                                            .WithClientSecret(salesKeyVaultClientSecret)
-                                                                            .WithAuthority(authority)
-                                                                            .Build().AcquireTokenForClient(scopes).ExecuteAsync();
-            return authResult.AccessToken;
-        }
+        //private static async Task<string> GetNewKeyVaultAccessToken()
+        //{
+        //    Microsoft.Identity.Client.AuthenticationResult authResult = null;
+        //    string authority = String.Format(CultureInfo.InvariantCulture, salesAADInstance, salesTenant);
+        //    List<String> scopes = new List<String>() { salesResourceID + "/.default" };
+        //    authResult = await Microsoft.Identity.Client.ConfidentialClientApplicationBuilder.Create(salesKeyVaultClientId)
+        //                                                                    .WithClientSecret(salesKeyVaultClientSecret)
+        //                                                                    .WithAuthority(authority)
+        //                                                                    .Build().AcquireTokenForClient(scopes).ExecuteAsync();
+        //    return authResult.AccessToken;
+        //}
 
         public static async Task<string> GetKeyVaultSecret(string Key)
         {

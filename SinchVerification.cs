@@ -22,7 +22,7 @@ namespace FunctionSinchapi
 
             try
             {
-                if ((req.Headers.TryGetValue("ApplicationID", out var applicationID) && applicationID == Environment.GetEnvironmentVariable("ApplicationID")) && req.Headers.TryGetValue("SaltKey", out var saltKey) && saltKey == Environment.GetEnvironmentVariable("SaltKey"))
+                if ((req.Headers.TryGetValue("ApplicationID", out var applicationID) && applicationID == Environment.GetEnvironmentVariable("ApplicationID")) && req.Headers.TryGetValue("SaltKey", out var saltKey) && saltKey == Environment.GetEnvironmentVariable("SaltKeySinch"))
                 {
                     string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
                     dynamic data = JObject.Parse(requestBody);

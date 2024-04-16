@@ -27,8 +27,8 @@ namespace FunctionSinchapi
 
         public void GetEnvironmentVariables()
         {
-            salesKeyVaultClientId = Environment.GetEnvironmentVariable("SalesKeyVaultClientId");
-            salesKeyVaultClientSecret = Environment.GetEnvironmentVariable("SalesKeyVaultClientSecret");
+            salesKeyVaultClientId = Environment.GetEnvironmentVariable("SalesKeyVaultClientIdSinch");
+            salesKeyVaultClientSecret = Environment.GetEnvironmentVariable("SalesKeyVaultClientSecretSinch");
             salesKeyVaultURL = Environment.GetEnvironmentVariable("SalesKeyVaultURL");
             salesResourceID = Environment.GetEnvironmentVariable("SalesResourceID");
             salesTenant = Environment.GetEnvironmentVariable("SalesTenant");
