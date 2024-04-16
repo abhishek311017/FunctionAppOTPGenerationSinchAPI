@@ -90,7 +90,6 @@ namespace FunctionSinchapi
 
             try
             {
-
                 //sinchProjectID = Environment.GetEnvironmentVariable("SinchProjectID");//await KeyVault.GetKeyVaultSecret("SinchProjectID");//
                 //sinchAppID = Environment.GetEnvironmentVariable("SinchAppID"); //await KeyVault.GetKeyVaultSecret("SinchAppID");//
                 sinchPhoneNumber = Environment.GetEnvironmentVariable("SinchPhoneNumber");

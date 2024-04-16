@@ -6,8 +6,10 @@
   <ItemGroup>
 	<None Remove=".gitattributes" />
 	<None Remove="Properties\launchSettings.json" />
+	<None Remove="Properties\PublishProfiles\appFNC-SALES-D01 - Zip Deploy.pubxml" />
 	<None Remove="Properties\serviceDependencies.json" />
 	<None Remove="Properties\serviceDependencies.local.json" />
+	<None Remove="Properties\ServiceDependencies\appFNC-SALES-D01 - Zip Deploy\profile.arm.json" />
 	<None Remove="README.md" />
   </ItemGroup>
   <ItemGroup>
@@ -23,5 +25,9 @@
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		  <CopyToPublishDirectory>Never</CopyToPublishDirectory>
 	  </None>
+  </ItemGroup>
+  <ItemGroup>
+	<Folder Include="Properties\PublishProfiles\" />
+	<Folder Include="Properties\ServiceDependencies\appFNC-SALES-D01 - Zip Deploy\" />
   </ItemGroup>
 </Project>
