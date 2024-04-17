@@ -40,7 +40,7 @@ namespace FunctionSinchapi
 
         private string sinchPhoneNumber;
 
-        private string base64Auth;
+        //private string base64Auth;
         #endregion
 
         #region Constructor
@@ -92,9 +92,21 @@ namespace FunctionSinchapi
             {
                 //sinchProjectID = Environment.GetEnvironmentVariable("SinchProjectID");//await KeyVault.GetKeyVaultSecret("SinchProjectID");//
                 //sinchAppID = Environment.GetEnvironmentVariable("SinchAppID"); //await KeyVault.GetKeyVaultSecret("SinchAppID");//
-                sinchPhoneNumber = Environment.GetEnvironmentVariable("SinchPhoneNumber");
-                sinchAPIKey = Environment.GetEnvironmentVariable("SinchAPIKey");
-                sinchServicePlanID = Environment.GetEnvironmentVariable("SinchServicePlanID");//await KeyVault.GetKeyVaultSecret("SinchServicePlanID");//
+                string salesEnv = Environment.GetEnvironmentVariable("SalesEnv");
+                if (!string.IsNullOrEmpty(salesEnv) && salesEnv.ToLower() == "local")
+                {
+                    sinchPhoneNumber = Environment.GetEnvironmentVariable("SinchPhoneNumber");
+                    sinchAPIKey = Environment.GetEnvironmentVariable("SinchAPIKey");
+                    sinchServicePlanID = Environment.GetEnvironmentVariable("SinchServicePlanID");
+                }
+                else
+                {
+                    sinchPhoneNumber = await KeyVault.GetKeyVaultSecret("SinchPhoneNumber");
+                    sinchAPIKey = await KeyVault.GetKeyVaultSecret("SinchAPIKey");
+                    sinchServicePlanID = await KeyVault.GetKeyVaultSecret("SinchServicePlanID");
+                }
+
+                //string url = salesKeyVaultURL;
                 Console.WriteLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + ": Execution started");
 
                 string authCode = GenerateVerificationCode();
