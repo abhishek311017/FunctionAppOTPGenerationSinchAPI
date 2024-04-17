@@ -1,24 +1,20 @@
-﻿//using Microsoft.Identity.Client;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
-
-using Newtonsoft.Json.Linq;
-using System;
-using System.Globalization;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Threading.Tasks;
-
-
-namespace FunctionSinchapi
+﻿namespace FunctionSinchapi
 {
-
+    using Microsoft.IdentityModel.Clients.ActiveDirectory;
+    using Newtonsoft.Json.Linq;
+    using System;
+    using System.Globalization;
+    using System.Net;
+    using System.Net.Http;
+    using System.Net.Http.Headers;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Key Vault information
     /// </summary>
     public class KeyVault : EnvironmentConfiguration
     {
+        #region MSAL
         //private static async Task<string> GetNewKeyVaultAccessToken()
         //{
         //    Microsoft.Identity.Client.AuthenticationResult authResult = null;
@@ -30,6 +26,7 @@ namespace FunctionSinchapi
         //                                                                    .Build().AcquireTokenForClient(scopes).ExecuteAsync();
         //    return authResult.AccessToken;
         //}
+        #endregion
 
         public static async Task<string> GetKeyVaultSecret(string Key)
         {

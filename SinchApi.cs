@@ -6,21 +6,6 @@ using System.Threading.Tasks;
 
 namespace FunctionSinchapi
 {
-    //public class TokenResponse
-    //{
-    //    [JsonProperty("access_token")]
-    //    public string AccessToken { get; set; }
-
-    //    [JsonProperty("expires_in")]
-    //    public int ExpiresIn { get; set; }
-
-    //    [JsonProperty("scope")]
-    //    public string Scope { get; set; }
-
-    //    [JsonProperty("token_type")]
-    //    public string TokenType { get; set; }
-    //}
-
     public class SinchApi : EnvironmentConfiguration
     {
         #region Variables
@@ -28,19 +13,11 @@ namespace FunctionSinchapi
 
         private readonly string logFileName = string.Empty;
 
-        //private string sinchAccessKey;
-
-        //private string sinchAccessSecret;
-
-        // private string sinchAuthURL;
-
         private string sinchServicePlanID;
 
         private string sinchAPIKey;
 
         private string sinchPhoneNumber;
-
-        //private string base64Auth;
         #endregion
 
         #region Constructor
@@ -48,34 +25,9 @@ namespace FunctionSinchapi
         {
             this.GetEnvironmentVariables();
             cloudStorage = new CloudStorage();
-            this.logFileName = this.salesLogsFolder + this.sinchLogsFolder + DateTime.UtcNow.ToString("hh:mm:ss.fff tt") + ".txt";
+            this.logFileName = this.salesLogsFolder + this.sinchLogsFolder + "SinchLog_" + DateTime.UtcNow.ToString("hh:mm:ss.fff tt") + ".txt";
         }
         #endregion
-
-        //private async Task<string> GetAccessToken()
-        //{
-        //    var requestData = new FormUrlEncodedContent(new[]
-        //    {
-        //        new KeyValuePair<string, string>("grant_type", "client_credentials")
-        //    });
-
-        //    sinchAccessKey = Environment.GetEnvironmentVariable("SinchAccessKey");//await KeyVault.GetKeyVaultSecret("SinchAccessKey"); // 
-        //    sinchAccessSecret = Environment.GetEnvironmentVariable("SinchAccessSecret");//await KeyVault.GetKeyVaultSecret("SinchAccessSecret"); //
-        //    sinchAuthURL = Environment.GetEnvironmentVariable("SinchAuthURL");
-        //    base64Auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{sinchAccessKey}:{sinchAccessSecret}"));
-
-        //    using (var httpClient = new HttpClient())
-        //    {
-        //        httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", base64Auth);
-        //        var response = await httpClient.PostAsync(sinchAuthURL, requestData);
-        //        var responseData = await response.Content.ReadAsStringAsync();
-
-        //        var tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(responseData);
-
-        //        string accessToken = tokenResponse.AccessToken;
-        //        return accessToken;
-        //    }
-        //}
 
         private static string GenerateVerificationCode()
         {
@@ -85,13 +37,10 @@ namespace FunctionSinchapi
 
         public async Task<JObject> Send(string phoneNumber)
         {
-            var responseContent = string.Empty;
             var responseBody = new JObject();
 
             try
             {
-                //sinchProjectID = Environment.GetEnvironmentVariable("SinchProjectID");//await KeyVault.GetKeyVaultSecret("SinchProjectID");//
-                //sinchAppID = Environment.GetEnvironmentVariable("SinchAppID"); //await KeyVault.GetKeyVaultSecret("SinchAppID");//
                 string salesEnv = Environment.GetEnvironmentVariable("SalesEnv");
                 if (!string.IsNullOrEmpty(salesEnv) && salesEnv.ToLower() == "local")
                 {
@@ -106,7 +55,6 @@ namespace FunctionSinchapi
                     sinchServicePlanID = await KeyVault.GetKeyVaultSecret("SinchServicePlanID");
                 }
 
-                //string url = salesKeyVaultURL;
                 Console.WriteLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + ": Execution started");
 
                 string authCode = GenerateVerificationCode();
@@ -125,7 +73,6 @@ namespace FunctionSinchapi
 
                 var sinchConversationAppURL = String.Format(this.sinchAppURL, sinchServicePlanID);
                 var postData = new StringContent(requestJson.ToString(), Encoding.UTF8, "application/json");
-                // var accessToken = await GetAccessToken();
 
                 using (var httpClient = new HttpClient())
                 {
@@ -136,9 +83,9 @@ namespace FunctionSinchapi
 
                     if (!response.IsSuccessStatusCode)
                     {
-                        Console.WriteLine(await response.Content.ReadAsStringAsync());
+                        string detail = await response.Content.ReadAsStringAsync();
                         logTracker.AppendLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + $": SinchConversation API request failed with status code: {response.StatusCode} and status message:{response.RequestMessage}");
-                        throw new Exception();
+                        throw new Exception(detail);
                     }
                     else
                     {
@@ -153,15 +100,16 @@ namespace FunctionSinchapi
             }
             catch (Exception ex)
             {
-                logTracker.AppendLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + $":Error occured during the process of Verification" + ex);
+                logTracker.AppendLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + $":Error occured during the process of Verification");
                 logTracker.AppendLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + $":Error Message {ex.Message}");
                 logTracker.AppendLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + $":Stack Trace: {ex.StackTrace}");
+                logTracker.AppendLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + $":Inner Exception Stack Trace: {ex.InnerException}");
                 Console.WriteLine(DateTime.Now.ToString("hh:mm:ss.fff tt") + " " + ex);
                 throw;
             }
             finally
             {
-                await this.cloudStorage.UploadFileToAzureBlob(this.logFileName, this.logTracker.ToString(), "application/json");
+                await this.cloudStorage.UploadFileToAzureBlob(this.logFileName, this.logTracker.ToString(), "text/plain");
             }
 
             return responseBody;
